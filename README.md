@@ -1,37 +1,76 @@
 # Signer4j
 
-A simpler way to perform digital signature operations with A1 and A3 certificates.
+> **Disclaimer:** Este projeto é um fork do repositório original de [l3onardo-oliv3ira](https://github.com/l3onardo-oliv3ira/signer4j).
 
-## Listing automatic detected devices
+Uma forma mais simples de realizar operações de assinatura digital com certificados A1 e A3.
+
+## Instalação
+
+### Dependências
+
+- [Progress4j](https://github.com/l3onardo-oliv3ira/progress4j)
+- [Utils4j](https://github.com/l3onardo-oliv3ira/utils4j)
+
+#### Adicionando dependências
+
+Para adicionar as dependências ao seu projeto, inclua as seguintes linhas no seu arquivo `pom.xml`:
+
+```xml
+<dependency>
+  <groupId>com.github.l3onardo-oliv3ira</groupId>
+  <artifactId>progress4j</artifactId>
+  <version>2.6.0-SNAPSHOT</version>
+</dependency>
+<dependency>
+  <groupId>com.github.l3onardo-oliv3ira</groupId>
+  <artifactId>utils4j</artifactId>
+  <version>2.6.0-SNAPSHOT</version>
+</dependency>
+```
+
+E instalar com o comando
+
+```bash
+mvn install:install-file -Dfile=path/to/progress4j-2.6.0-SNAPSHOT.jar -DgroupId=com.github.l3onardo-oliv3ira -DartifactId=progress4j -Dversion=2.6.0-SNAPSHOT -Dpackaging=jar
+
+mvn install:install-file -Dfile=path/to/utils4j-2.6.0-SNAPSHOT.jar -DgroupId=com.github.l3onardo-oliv3ira -DartifactId=utils4j -Dversion=2.6.0-SNAPSHOT -Dpackaging=jar
+
+```
+
+## Listando dispositivos detectados automaticamente
+
 ```java
 IDeviceManager dm = new DeviceManager();
 
 dm.getDevices().stream().forEach(d -> {
   IDevice device = d;
   System.out.println("Driver: " + device.getDriver());
-  System.out.println("Label: " + device.getLabel());
-  System.out.println("Model: " + device.getModel());
+  System.out.println("Etiqueta: " + device.getLabel());
+  System.out.println("Modelo: " + device.getModel());
   System.out.println("Serial: " + device.getSerial());
 });
 ```
-#### Device manager interface
+
+#### Interface do gerenciador de dispositivos
+
 ```java
 public interface IDeviceManager {
   List<IDevice> getDevices();
   List<IDevice> getDevices(boolean forceReload);
   List<IDevice> getDevices(Predicate<IDevice> predicate);
   List<IDevice> getDevices(Predicate<IDevice> predicate, boolean forceReload);
-  
+
   Optional<IDevice> firstDevice();
   Optional<IDevice> firstDevice(boolean forceReload);
   Optional<IDevice> firstDevice(Predicate<IDevice> predicate);
   Optional<IDevice> firstDevice(Predicate<IDevice> predicate, boolean forceReload);
- 
+
   void close();
 }
-
 ```
-#### Device interface
+
+#### Interface do dispositivo
+
 ```java
 public interface ISerialItem {
   String getManufacturer();
@@ -50,59 +89,64 @@ public interface IDevice extends IGadget {
 }
 ```
 
-## First device access and certificate listing
+## Acessando o primeiro dispositivo e listando certificados
+
 ```java
 IDevice device = dm.firstDevice().get();
-System.out.println("Certificates");
+System.out.println("Certificados");
 device.getCertificates().stream().forEach(c -> {
   System.out.println("---------");
-  System.out.println("Name: " + c.getName());
-  System.out.println("After date: " + c.getAfterDate());
-  System.out.println("Before date: " + c.getBeforeDate());
-  System.out.println("Email: " + c.getEmail().orElse("Unknown"));
+  System.out.println("Nome: " + c.getName());
+  System.out.println("Data de início: " + c.getAfterDate());
+  System.out.println("Data de expiração: " + c.getBeforeDate());
+  System.out.println("Email: " + c.getEmail().orElse("Desconhecido"));
   //.... c.get*
-  
+
   if (certificate.hasCertificatePF()) {
-    ICertificatePF pf = c.getCertificatePF().get();
-    System.out.println("CPF: " + pf.getCPF().get());
-    //.... pf.get*
-  
+   ICertificatePF pf = c.getCertificatePF().get();
+   System.out.println("CPF: " + pf.getCPF().get());
+   //.... pf.get*
+
   }
   if (certificate.hasCertificatePJ()) {
-    ICertificatePJ pj = c.getCertificatePJ().get();
-    System.out.println("CNPJ: " + pj.getCNPJ().get());
-    //.... pj.get*
-  
+   ICertificatePJ pj = c.getCertificatePJ().get();
+   System.out.println("CNPJ: " + pj.getCNPJ().get());
+   //.... pj.get*
+
   }
 });
 ```
-#### Certificate interface
+
+#### Interface do certificado
+
 ```java
 public interface ICertificate extends ISerialItem {
   Date getAfterDate();
   Date getBeforeDate();
-  
+
   IDistinguishedName getCertificateIssuerDN();
   IDistinguishedName getCertificateSubjectDN();
-  
+
   List<String> getCRLDistributionPoint() throws IOException;
-  
+
   Optional<String> getEmail();
-  Optional<ICertificatePF> getCertificatePF(); //full abstraction for Pessoa Física
-  Optional<ICertificatePJ> getCertificatePJ(); //full abstraction for Pessoa Jurídica
-  
+  Optional<ICertificatePF> getCertificatePF(); // abstração completa para Pessoa Física
+  Optional<ICertificatePJ> getCertificatePJ(); // abstração completa para Pessoa Jurídica
+
   KeyUsage getKeyUsage();
   ISubjectAlternativeNames getSubjectAlternativeNames();
-  
+
   String getName();
-  
+
   X509Certificate toX509();
-  
+
   boolean hasCertificatePF();
   boolean hasCertificatePJ();
 }
 ```
-## Brazilian abstraction for individual and legal entity certificates
+
+## Abstração brasileira para certificados de pessoa física e jurídica
+
 ```java
 public interface ICertificatePF {
   Optional<String> getCPF();
@@ -132,19 +176,23 @@ public interface ICertificatePJ {
   Optional<String> getCEI();
 }
 ```
-## Show slot informations
+
+## Exibindo informações do slot
+
 ```java
 ISlot slot = device.getSlot();
 
-System.out.println("Slot information");
-System.out.println("Description: " + slot.getDescription());
-System.out.println("FirmewareVersion: " + slot.getFirmewareVersion());
-System.out.println("HardwareVersion: " + slot.getHardwareVersion());
-System.out.println("Manufacturer: " + slot.getManufacturer());
-System.out.println("Number: " + slot.getNumber());
+System.out.println("Informações do slot");
+System.out.println("Descrição: " + slot.getDescription());
+System.out.println("Versão do firmware: " + slot.getFirmewareVersion());
+System.out.println("Versão do hardware: " + slot.getHardwareVersion());
+System.out.println("Fabricante: " + slot.getManufacturer());
+System.out.println("Número: " + slot.getNumber());
 System.out.println("Serial: " + slot.getSerial());
 ```
-#### Slot interface
+
+#### Interface do slot
+
 ```java
 public interface ISlot extends ISerialItem {
   long getNumber();
@@ -155,35 +203,39 @@ public interface ISlot extends ISerialItem {
   String getFirmewareVersion();
 }
 ```
-## Token abstraction for a slot
+
+## Abstração de token para um slot
+
 ```java
 IToken token = slot.getToken();
 
 try {
   token.login();
 
-  String message = "Hello world!";
-  
+  String mensagem = "Olá mundo!";
+
   ISimpleSigner simpleSigner = token.signerBuilder().build();
-  
-  ISignedData data = simpleSigner.process(message);
-  
-  System.out.println("base64 signed data" + data.getSignature64());
+
+  ISignedData data = simpleSigner.process(mensagem);
+
+  System.out.println("dados assinados base64: " + data.getSignature64());
 } catch (TokenLockedException e) {
-  System.out.println("Your token is locked");
+  System.out.println("Seu token está bloqueado");
 } catch (InvalidPinException e) {
-  System.out.println("Your password is incorrect!");
+  System.out.println("Sua senha está incorreta!");
 } catch (NoTokenPresentException e) {
-  System.out.println("Your token is not connected to USB");
+  System.out.println("Seu token não está conectado ao USB");
 } catch (LoginCanceledException e) {
-  System.out.println("Authentication canceled by user");
+  System.out.println("Autenticação cancelada pelo usuário");
 } catch (Signer4JException e) {
   System.out.println(e.getMessage());
 } finally {
-  token.logout(); 
+  token.logout();
 }
 ```
-#### Signed data interface
+
+#### Interface de dados assinados
+
 ```java
 public interface IPersonalData {
   PrivateKey getPrivateKey();
@@ -200,7 +252,9 @@ public interface ISignedData extends IPersonalData {
   void writeTo(OutputStream out) throws IOException;
 }
 ```
-#### Token interface
+
+#### Interface do token
+
 ```java
 public interface IToken extends IGadget {
   IToken login() throws Signer4JException;
@@ -212,62 +266,64 @@ public interface IToken extends IGadget {
 
   long getMinPinLen();
   long getMaxPinLen();
-  
+
   String getManufacturer();
   boolean isAuthenticated();
-  
+
   ISlot getSlot();
   TokenType getType();
-  
+
   ICertificates getCertificates();
   IKeyStoreAccess getKeyStoreAccess();
-  
+
   ISignerBuilder signerBuilder();
   ISignerBuilder signerBuilder(ICertificateChooserFactory factory);
-  
+
   ICMSSignerBuilder cmsSignerBuilder();
   ICMSSignerBuilder cmsSignerBuilder(ICertificateChooserFactory factory);
-  
+
   IPKCS7SignerBuilder pkcs7SignerBuilder();
   IPKCS7SignerBuilder pkcs7SignerBuilder(ICertificateChooserFactory factory);
 }
 ```
 
-## Signing file to .p7s output
+## Assinando arquivo para saída .p7s
+
 ```java
 try {
   token.login();
 
   ICMSSigner cmsSigner = token.cmsSignerBuilder()
-      .usingAlgorithm(SignatureAlgorithm.SHA1withRSA)
-      .usingAttributes(true)
-      .usingMemoryLimit(50 * 1024 * 1024)
-      .usingSignatureType(SignatureType.ATTACHED)
-      .build();
+    .usingAlgorithm(SignatureAlgorithm.SHA1withRSA)
+    .usingAttributes(true)
+    .usingMemoryLimit(50 * 1024 * 1024)
+    .usingSignatureType(SignatureType.ATTACHED)
+    .build();
 
   ISignedData data = cmsSigner.process(new File("./input.pdf"));
 
   try(OutputStream out = new FileOutputStream(new File("./input.pdf.p7s"))) {
-    data.writeTo(out);
+   data.writeTo(out);
   }
 } catch (TokenLockedException e) {
-  System.out.println("Your token is locked");
+  System.out.println("Seu token está bloqueado");
 } catch (InvalidPinException e) {
-  System.out.println("Your password is incorrect!");
+  System.out.println("Sua senha está incorreta!");
 } catch (NoTokenPresentException e) {
-  System.out.println("Your token is not connected to USB");
+  System.out.println("Seu token não está conectado ao USB");
 } catch (LoginCanceledException e) {
-  System.out.println("Authentication canceled by user");
+  System.out.println("Autenticação cancelada pelo usuário");
 } catch (Signer4JException e) {
   System.out.println(e.getMessage());
 } catch (IOException e) {
-  System.out.println("Unabled to read input file");
+  System.out.println("Não foi possível ler o arquivo de entrada");
 } finally {
-  token.logout(); 
+  token.logout();
 }
 ```
 
-#### Byte processor interface
+#### Interface de processamento de bytes
+
 ```java
 public interface IByteProcessor {
   ISignedData process(byte[] content, int offset, int length) throws Signer4JException;
@@ -283,5 +339,4 @@ public interface IByteProcessor {
   String process64(String content, Charset charset) throws Signer4JException;
   String process64(File input) throws Signer4JException, IOException;
 }
-
 ```
